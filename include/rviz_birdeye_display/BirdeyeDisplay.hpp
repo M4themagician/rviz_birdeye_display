@@ -1,5 +1,6 @@
 //
-// Created by jonas on 6/30/21.
+// Created by jonas on 6/30/21 at https://github.com/teamspatzenhirn/rviz_birdeye_display.
+// Forked by Lennart Evers on 10/30/2023
 //
 
 #ifndef VIZ_BIRDEYEDISPLAY_HPP
@@ -9,63 +10,64 @@
 #include <rviz_common/message_filter_display.hpp>
 #include <rviz_common/properties/editable_enum_property.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <spatz_interfaces/msg/bird_eye_param.hpp>
+#include "drives_image_processing_msgs/msg/map_meta_data.hpp"
 
 #include "rviz_birdeye_display/visibility_control.hpp"
 
-namespace rviz_birdeye_display::displays {
+namespace rviz_birdeye_display::displays
+{
 
-    class rviz_birdeye_display_PUBLIC BirdeyeDisplay : public rviz_common::_RosTopicDisplay {
-        Q_OBJECT
+  class rviz_birdeye_display_PUBLIC BirdeyeDisplay : public rviz_common::_RosTopicDisplay
+  {
+    Q_OBJECT
 
-        using ImageMsg = sensor_msgs::msg::Image;
-        using ParamMsg = spatz_interfaces::msg::BirdEyeParam;
+    using ImageMsg = sensor_msgs::msg::Image;
+    using ParamMsg = drives_image_processing_msgs::msg::MapMetaData;
 
-      public:
-        BirdeyeDisplay();
-        ~BirdeyeDisplay() override;
+  public:
+    BirdeyeDisplay();
+    ~BirdeyeDisplay() override;
 
-      private:
-        void onInitialize() override;
+  private:
+    void onInitialize() override;
 
-        void reset() override;
-        void processMessage(const ImageMsg ::ConstSharedPtr &msg);
+    void reset() override;
+    void processMessage(const ImageMsg ::ConstSharedPtr &msg);
 
+    void incomingMessage(const ImageMsg::ConstSharedPtr &msg);
 
-        Ogre::ManualObject *imageObject = nullptr;
-        Ogre::TexturePtr texture;
-        Ogre::MaterialPtr material;
+    /**
+     * Create new m_texture with current image size if it has changed
+     */
+    void createTextures();
+    void subscribe();
+    void unsubscribe();
 
-        rclcpp::Subscription<ImageMsg>::SharedPtr imageSub;
-        rclcpp::Subscription<ParamMsg>::SharedPtr paramSub;
-        std::optional<ParamMsg> currentBirdeyeParam;
+    void resetSubscription();
+    void updateTopic() override;
+    void setTopic(const QString &topic, const QString &datatype) override;
+    void onEnable() override;
 
-        int messagesReceived = 0;
+    void onDisable() override;
 
-        std::string materialName;
-        std::string textureName;
+  private:
+    Ogre::ManualObject *m_imageObject = nullptr;
+    Ogre::TexturePtr m_texture;
+    Ogre::MaterialPtr m_material;
 
-        int currentHeight = 0;
-        int currentWidth = 0;
+    rclcpp::Subscription<ImageMsg>::SharedPtr m_imageSub;
+    rclcpp::Subscription<ParamMsg>::SharedPtr m_paramSub;
+    std::optional<ParamMsg> m_currentBirdeyeParam;
 
-        void incomingMessage(const ImageMsg::ConstSharedPtr &msg);
+    int m_messagesReceived = 0;
 
-        /**
-         * Create new texture with current image size if it has changed
-         */
-        void createTextures();
-        void subscribe();
-        void unsubscribe();
+    std::string m_materialName;
+    std::string m_textureName;
 
-        void resetSubscription();
-        void updateTopic() override;
-        void setTopic(const QString &topic, const QString &datatype) override;
-        void onEnable() override;
-
-        void onDisable() override;
-    };
+    int m_currentHeight = 0;
+    int m_currentWidth = 0;
+  };
 
 } // namespace rviz_birdeye_display::displays
-
 
 #endif // VIZ_BIRDEYEDISPLAY_HPP
