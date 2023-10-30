@@ -8,7 +8,7 @@ find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(rviz_ogre_vendor REQUIRED)
 
-find_package(spatz_interfaces REQUIRED)
+find_package(drives_image_processing_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 find_package(OpenCV REQUIRED)
@@ -35,7 +35,7 @@ set_property(TARGET rviz_birdeye_display PROPERTY CXX_STANDARD 17)
 target_compile_options(rviz_birdeye_display PRIVATE -Wall -Wextra -Wpedantic)
 
 target_include_directories(rviz_birdeye_display PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
         ${Qt5Widgets_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
@@ -61,7 +61,7 @@ pluginlib_export_plugin_description_file(rviz_common plugins_description.xml)
 ament_target_dependencies(rviz_birdeye_display
         PUBLIC
         sensor_msgs
-        spatz_interfaces
+        drives_image_processing_msgs
         rviz_common
         rviz_rendering
         )
@@ -71,7 +71,7 @@ ament_export_targets(rviz_birdeye_display HAS_LIBRARY_TARGET)
 ament_export_dependencies(
         rviz_common
         sensor_msgs
-        spatz_interfaces
+        drives_image_processing_msgs
         rviz_ogre_vendor
 )
 
