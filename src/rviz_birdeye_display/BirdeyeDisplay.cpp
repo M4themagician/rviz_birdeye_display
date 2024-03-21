@@ -52,6 +52,15 @@ namespace rviz_birdeye_display::displays
         birdeye_count++;
         m_materialName = "BirdeyeMaterial" + std::to_string(birdeye_count);
         m_textureName = "BirdeyeTexture" + std::to_string(birdeye_count);
+
+        m_currentBirdeyeParam = drives_image_processing_msgs::msg::MapMetaData();
+        m_currentBirdeyeParam.width = 800;
+        m_currentBirdeyeParam.height = 800;
+        m_currentBirdeyeParam.resolution = 0.1;
+        auto offset = geometry_msgs::msg::Pose2D();
+        offset.x = -40;
+        offset.y = 40;
+        m_currentBirdeyeParam.offset = std::move(offset);
     }
 
     BirdeyeDisplay::~BirdeyeDisplay()
@@ -65,16 +74,16 @@ namespace rviz_birdeye_display::displays
 
     void BirdeyeDisplay::createTextures()
     {
-        assert(m_currentBirdeyeParam.has_value());
+        // assert(m_currentBirdeyeParam.has_value());
 
-        if (m_currentBirdeyeParam->height == m_currentHeight and m_currentBirdeyeParam->width == m_currentWidth)
+        if (m_currentBirdeyeParam.height == m_currentHeight and m_currentBirdeyeParam.width == m_currentWidth)
         {
             return;
         }
 
         m_texture = Ogre::TextureManager::getSingleton().createManual(
-            m_textureName, RESOURCEGROUP_NAME, Ogre::TEX_TYPE_2D, m_currentBirdeyeParam->width,
-            m_currentBirdeyeParam->height, 1, 0, Ogre::PF_BYTE_BGRA, Ogre::TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
+            m_textureName, RESOURCEGROUP_NAME, Ogre::TEX_TYPE_2D, m_currentBirdeyeParam.width,
+            m_currentBirdeyeParam.height, 1, 0, Ogre::PF_BYTE_BGRA, Ogre::TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);
 
         m_material = rviz_rendering::MaterialManager::createMaterialWithNoLighting(m_materialName);
 
@@ -84,8 +93,8 @@ namespace rviz_birdeye_display::displays
         rpass->setEmissive(Ogre::ColourValue::White);
         rpass->setSceneBlending(Ogre::SBT_TRANSPARENT_ALPHA);
 
-        m_currentHeight = m_currentBirdeyeParam->height;
-        m_currentWidth = m_currentBirdeyeParam->width;
+        m_currentHeight = m_currentBirdeyeParam.height;
+        m_currentWidth = m_currentBirdeyeParam.width;
     }
 
     void BirdeyeDisplay::onInitialize()
@@ -107,19 +116,19 @@ namespace rviz_birdeye_display::displays
     void BirdeyeDisplay::processMessage(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
     {
 
-        if (not m_currentBirdeyeParam.has_value())
-        {
-            setStatus(rviz_common::properties::StatusProperty::Error, "Params", QString("No BirdEyeParam"));
-            return;
-        }
+        // if (!m_currentBirdeyeParam.has_value())
+        // {
+        //     setStatus(rviz_common::properties::StatusProperty::Error, "Params", QString("No BirdEyeParam"));
+        //     return;
+        // }
         setStatus(rviz_common::properties::StatusProperty::Ok, "Params", QString("OK"));
 
         Ogre::Vector3 position;
         Ogre::Quaternion orientation;
-        if (!context_->getFrameManager()->getTransform(m_currentBirdeyeParam->header.frame_id, msg->header.stamp,
+        if (!context_->getFrameManager()->getTransform("ego_vehicle", msg->header.stamp,
                                                        position, orientation))
         {
-            setMissingTransformToFixedFrame(m_currentBirdeyeParam->header.frame_id);
+            setMissingTransformToFixedFrame("ego_vehicle");
             return;
         }
         setTransformOk();
@@ -133,10 +142,10 @@ namespace rviz_birdeye_display::displays
         m_imageObject->estimateVertexCount(4);
         m_imageObject->begin(m_material->getName(), Ogre::RenderOperation::OT_TRIANGLE_FAN, "rviz_rendering");
 
-        auto xOffset = m_currentBirdeyeParam->offset.x / m_currentBirdeyeParam->resolution;
-        auto yOffset = m_currentBirdeyeParam->offset.y / m_currentBirdeyeParam->resolution;
-        auto height = m_currentBirdeyeParam->height / m_currentBirdeyeParam->resolution;
-        auto width = m_currentBirdeyeParam->width / m_currentBirdeyeParam->resolution;
+        auto xOffset = m_currentBirdeyeParam.offset.x; // / m_currentBirdeyeParam->resolution;
+        auto yOffset = m_currentBirdeyeParam.offset.y; // / m_currentBirdeyeParam->resolution;
+        auto height = m_currentBirdeyeParam.height * m_currentBirdeyeParam.resolution;
+        auto width = m_currentBirdeyeParam.width * m_currentBirdeyeParam.resolution;
 
         /**
          *        birdeye-height
@@ -217,15 +226,16 @@ namespace rviz_birdeye_display::displays
 
         try
         {
+            rclcpp::SensorDataQoS qos;
             m_imageSub = rviz_ros_node_.lock()->get_raw_node()->create_subscription<ImageMsg>(
-                topic_property_->getTopicStd(), qos_profile,
+                topic_property_->getTopicStd(), qos,
                 [this](ImageMsg::ConstSharedPtr msg)
                 { incomingMessage(msg); });
 
-            m_paramSub = rviz_ros_node_.lock()->get_raw_node()->create_subscription<ParamMsg>(
-                parentTopic(topic_property_->getTopicStd()) + "/params", qos_profile,
-                [this](ParamMsg ::ConstSharedPtr msg)
-                { this->m_currentBirdeyeParam = *msg; });
+            // m_paramSub = rviz_ros_node_.lock()->get_raw_node()->create_subscription<ParamMsg>(
+            //     parentTopic(topic_property_->getTopicStd()) + "/map_metadata", qos,
+            //     [this](ParamMsg ::ConstSharedPtr msg)
+            //     { this->m_currentBirdeyeParam = *msg; });
 
             setStatus(rviz_common::properties::StatusProperty::Ok, "Topic", "OK");
         }

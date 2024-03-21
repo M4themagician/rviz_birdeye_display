@@ -61,6 +61,7 @@ pluginlib_export_plugin_description_file(rviz_common plugins_description.xml)
 ament_target_dependencies(rviz_birdeye_display
         PUBLIC
         sensor_msgs
+        geometry_msgs
         drives_image_processing_msgs
         rviz_common
         rviz_rendering
@@ -71,6 +72,7 @@ ament_export_targets(rviz_birdeye_display HAS_LIBRARY_TARGET)
 ament_export_dependencies(
         rviz_common
         sensor_msgs
+        geometry_msgs
         drives_image_processing_msgs
         rviz_ogre_vendor
 )

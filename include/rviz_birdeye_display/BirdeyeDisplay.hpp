@@ -9,7 +9,8 @@
 #include <OgreHardwarePixelBuffer.h>
 #include <rviz_common/message_filter_display.hpp>
 #include <rviz_common/properties/editable_enum_property.hpp>
-#include <sensor_msgs/msg/image.hpp>
+#include "sensor_msgs/msg/image.hpp"
+#include "geometry_msgs/msg/pose2_d.hpp"
 #include "drives_image_processing_msgs/msg/map_meta_data.hpp"
 
 #include "rviz_birdeye_display/visibility_control.hpp"
@@ -57,7 +58,7 @@ namespace rviz_birdeye_display::displays
 
     rclcpp::Subscription<ImageMsg>::SharedPtr m_imageSub;
     rclcpp::Subscription<ParamMsg>::SharedPtr m_paramSub;
-    std::optional<ParamMsg> m_currentBirdeyeParam;
+    drives_image_processing_msgs::msg::MapMetaData m_currentBirdeyeParam;
 
     int m_messagesReceived = 0;
 
