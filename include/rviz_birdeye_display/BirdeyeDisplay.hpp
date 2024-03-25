@@ -11,7 +11,7 @@
 #include <rviz_common/properties/editable_enum_property.hpp>
 #include "sensor_msgs/msg/image.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
-#include "drives_image_processing_msgs/msg/map_meta_data.hpp"
+#include "drives_image_processing_msgs/msg/category_grid_map.hpp"
 
 #include "rviz_birdeye_display/visibility_control.hpp"
 
@@ -22,8 +22,7 @@ namespace rviz_birdeye_display::displays
   {
     Q_OBJECT
 
-    using ImageMsg = sensor_msgs::msg::Image;
-    using ParamMsg = drives_image_processing_msgs::msg::MapMetaData;
+    using ImageMsg = drives_image_processing_msgs::msg::CategoryGridMap;
 
   public:
     BirdeyeDisplay();
@@ -57,7 +56,6 @@ namespace rviz_birdeye_display::displays
     Ogre::MaterialPtr m_material;
 
     rclcpp::Subscription<ImageMsg>::SharedPtr m_imageSub;
-    rclcpp::Subscription<ParamMsg>::SharedPtr m_paramSub;
     drives_image_processing_msgs::msg::MapMetaData m_currentBirdeyeParam;
 
     int m_messagesReceived = 0;
@@ -65,8 +63,10 @@ namespace rviz_birdeye_display::displays
     std::string m_materialName;
     std::string m_textureName;
 
-    int m_currentHeight = 0;
-    int m_currentWidth = 0;
+    uint32_t m_currentHeight = 0;
+    uint32_t m_currentWidth = 0;
+
+    int m_num_classes = 11;
   };
 
 } // namespace rviz_birdeye_display::displays

@@ -113,7 +113,7 @@ namespace rviz_birdeye_display::displays
         m_messagesReceived = 0;
     }
 
-    void BirdeyeDisplay::processMessage(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
+    void BirdeyeDisplay::processMessage(const drives_image_processing_msgs::msg::CategoryGridMap::ConstSharedPtr &msg)
     {
 
         // if (!m_currentBirdeyeParam.has_value())
@@ -121,6 +121,9 @@ namespace rviz_birdeye_display::displays
         //     setStatus(rviz_common::properties::StatusProperty::Error, "Params", QString("No BirdEyeParam"));
         //     return;
         // }
+
+        m_currentBirdeyeParam = msg->metadata;
+        m_num_classes = m_currentBirdeyeParam.categories.size();
         setStatus(rviz_common::properties::StatusProperty::Ok, "Params", QString("OK"));
 
         Ogre::Vector3 position;
@@ -142,10 +145,10 @@ namespace rviz_birdeye_display::displays
         m_imageObject->estimateVertexCount(4);
         m_imageObject->begin(m_material->getName(), Ogre::RenderOperation::OT_TRIANGLE_FAN, "rviz_rendering");
 
-        auto xOffset = m_currentBirdeyeParam.offset.x; // / m_currentBirdeyeParam->resolution;
-        auto yOffset = m_currentBirdeyeParam.offset.y; // / m_currentBirdeyeParam->resolution;
         auto height = m_currentBirdeyeParam.height * m_currentBirdeyeParam.resolution;
         auto width = m_currentBirdeyeParam.width * m_currentBirdeyeParam.resolution;
+        auto xOffset = m_currentBirdeyeParam.offset.x; // / m_currentBirdeyeParam->resolution;
+        auto yOffset = m_currentBirdeyeParam.offset.y; // / m_currentBirdeyeParam->resolution;
 
         /**
          *        birdeye-height
@@ -163,19 +166,19 @@ namespace rviz_birdeye_display::displays
          */
 
         // 0
-        m_imageObject->position(xOffset, height - yOffset, 0);
+        m_imageObject->position(xOffset, height + yOffset, 0);
         m_imageObject->textureCoord(0, 0);
 
         // 1
-        m_imageObject->position(xOffset + width, height - yOffset, 0);
+        m_imageObject->position(xOffset + width, height + yOffset, 0);
         m_imageObject->textureCoord(1, 0);
 
         // 2
-        m_imageObject->position(xOffset + width, -yOffset, 0);
+        m_imageObject->position(xOffset + width, +yOffset, 0);
         m_imageObject->textureCoord(1, 1);
 
         // 3
-        m_imageObject->position(xOffset, -yOffset, 0);
+        m_imageObject->position(xOffset, +yOffset, 0);
         m_imageObject->textureCoord(0, 1);
         m_imageObject->end();
 
@@ -185,26 +188,42 @@ namespace rviz_birdeye_display::displays
         pixelBuffer->lock(Ogre::HardwareBuffer::HBL_DISCARD);
         const Ogre::PixelBox &pixelBox = pixelBuffer->getCurrentLock();
 
-        cv::Mat input(msg->height, msg->width, cvTypeFromEncoding(msg->encoding), (void *)msg->data.data(), msg->step);
+        auto img_msg = msg->map;
+
+        cv::Mat input_categories(img_msg.height, img_msg.width, cvTypeFromEncoding(img_msg.encoding), (void *)img_msg.data.data(), img_msg.step);
+
+        cv::Mat input;
+        cv::applyColorMap(255 / m_num_classes * input_categories, input, cv::COLORMAP_INFERNO);
 
         cv::Mat textureMat(m_currentHeight, m_currentWidth, CV_8UC4, (void *)pixelBox.data);
+        cv::cvtColor(input, textureMat, cv::COLOR_BGR2BGRA, 4);
 
-        if (sensor_msgs::image_encodings::numChannels(msg->encoding) == 1)
-        {
-            cv::cvtColor(input, textureMat, cv::COLOR_GRAY2BGRA, 4);
-        }
-        else if (msg->encoding.rfind("rgb", 0) == 0)
-        {
-            cv::cvtColor(input, textureMat, cv::COLOR_RGB2BGRA, 4);
-        }
-        else if (msg->encoding.rfind("bgr", 0) == 0)
-        {
-            cv::cvtColor(input, textureMat, cv::COLOR_BGR2BGRA, 4);
-        }
-        else
-        {
-            throw std::runtime_error{"Unknown encoding: " + msg->encoding};
-        }
+        // Split the image for access to alpha channel
+        std::vector<cv::Mat> channels(4);
+        cv::split(textureMat, channels);
+
+        // Assign the mask to the last channel of the image
+        channels[3] = 255 * (1 - input_categories == 0);
+
+        // Finally concat channels for rgba image
+        cv::merge(channels, textureMat);
+
+        // if (sensor_msgs::image_encodings::numChannels(input.encoding) == 1)
+        // {
+        //     cv::cvtColor(input, textureMat, cv::COLOR_GRAY2BGRA, 4);
+        // }
+        // else if (input.encoding.rfind("rgb", 0) == 0)
+        // {
+        //     cv::cvtColor(input, textureMat, cv::COLOR_RGB2BGRA, 4);
+        // }
+        // else if (input.encoding.rfind("bgr", 0) == 0)
+        // {
+        //     cv::cvtColor(input, textureMat, cv::COLOR_BGR2BGRA, 4);
+        // }
+        // else
+        // {
+        //     throw std::runtime_error{"Unknown encoding: " + input.encoding};
+        // }
 
         // Unlock the pixel buffer
         pixelBuffer->unlock();
@@ -229,7 +248,7 @@ namespace rviz_birdeye_display::displays
             rclcpp::SensorDataQoS qos;
             m_imageSub = rviz_ros_node_.lock()->get_raw_node()->create_subscription<ImageMsg>(
                 topic_property_->getTopicStd(), qos,
-                [this](ImageMsg::ConstSharedPtr msg)
+                [this](drives_image_processing_msgs::msg::CategoryGridMap::ConstSharedPtr msg)
                 { incomingMessage(msg); });
 
             // m_paramSub = rviz_ros_node_.lock()->get_raw_node()->create_subscription<ParamMsg>(
@@ -249,7 +268,6 @@ namespace rviz_birdeye_display::displays
     void BirdeyeDisplay::unsubscribe()
     {
         m_imageSub.reset();
-        m_paramSub.reset();
     }
 
     void BirdeyeDisplay::updateTopic()
