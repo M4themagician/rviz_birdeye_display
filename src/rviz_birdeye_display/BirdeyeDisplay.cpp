@@ -193,7 +193,7 @@ namespace rviz_birdeye_display::displays
         cv::Mat input_categories(img_msg.height, img_msg.width, cvTypeFromEncoding(img_msg.encoding), (void *)img_msg.data.data(), img_msg.step);
 
         cv::Mat input;
-        cv::applyColorMap(255 / m_num_classes * input_categories, input, cv::COLORMAP_INFERNO);
+        cv::applyColorMap(255 / m_num_classes * input_categories, input, cv::COLORMAP_VIRIDIS);
 
         cv::Mat textureMat(m_currentHeight, m_currentWidth, CV_8UC4, (void *)pixelBox.data);
         cv::cvtColor(input, textureMat, cv::COLOR_BGR2BGRA, 4);
