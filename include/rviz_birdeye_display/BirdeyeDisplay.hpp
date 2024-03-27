@@ -65,6 +65,7 @@ namespace rviz_birdeye_display::displays
 
     uint32_t m_currentHeight = 0;
     uint32_t m_currentWidth = 0;
+    double m_currentResolution = 0.05;
 
     int m_num_classes = 11;
   };

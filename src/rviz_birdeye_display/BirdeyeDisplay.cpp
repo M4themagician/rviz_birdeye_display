@@ -48,7 +48,7 @@ namespace rviz_birdeye_display::displays
         topic_property_->setMessageType(QString::fromStdString(message_type));
         topic_property_->setDescription(QString::fromStdString(message_type) + " topic to subscribe to.");
 
-        static int birdeye_count = 0;
+        static int birdeye_count{0};
         birdeye_count++;
         m_materialName = "BirdeyeMaterial" + std::to_string(birdeye_count);
         m_textureName = "BirdeyeTexture" + std::to_string(birdeye_count);
@@ -76,10 +76,14 @@ namespace rviz_birdeye_display::displays
     {
         // assert(m_currentBirdeyeParam.has_value());
 
-        if (m_currentBirdeyeParam.height == m_currentHeight and m_currentBirdeyeParam.width == m_currentWidth)
+        if (m_currentBirdeyeParam.height == m_currentHeight and m_currentBirdeyeParam.width == m_currentWidth and m_currentBirdeyeParam.resolution == m_currentResolution)
         {
             return;
         }
+        static int birdeye_count{0};
+        birdeye_count++;
+        m_materialName = "BirdeyeMaterial" + std::to_string(birdeye_count);
+        m_textureName = "BirdeyeTexture" + std::to_string(birdeye_count);
 
         m_texture = Ogre::TextureManager::getSingleton().createManual(
             m_textureName, RESOURCEGROUP_NAME, Ogre::TEX_TYPE_2D, m_currentBirdeyeParam.width,
@@ -95,6 +99,7 @@ namespace rviz_birdeye_display::displays
 
         m_currentHeight = m_currentBirdeyeParam.height;
         m_currentWidth = m_currentBirdeyeParam.width;
+        m_currentResolution = m_currentBirdeyeParam.resolution;
     }
 
     void BirdeyeDisplay::onInitialize()
