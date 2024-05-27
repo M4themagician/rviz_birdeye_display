@@ -6,12 +6,16 @@
 #ifndef VIZ_BIRDEYEDISPLAY_HPP
 #define VIZ_BIRDEYEDISPLAY_HPP
 
+#include <opencv2/opencv.hpp>
 #include <OgreHardwarePixelBuffer.h>
 #include <rviz_common/message_filter_display.hpp>
+#include <rviz_common/properties/float_property.hpp>
 #include <rviz_common/properties/editable_enum_property.hpp>
 #include "sensor_msgs/msg/image.hpp"
 #include "geometry_msgs/msg/pose2_d.hpp"
 #include "drives_image_processing_msgs/msg/category_grid_map.hpp"
+#include <rviz_common/display.hpp>
+#include <rviz_common/message_filter_display.hpp>
 
 #include "rviz_birdeye_display/visibility_control.hpp"
 
@@ -50,6 +54,9 @@ namespace rviz_birdeye_display::displays
 
     void onDisable() override;
 
+  private Q_SLOTS:
+    void updateColormap();
+
   private:
     Ogre::ManualObject *m_imageObject = nullptr;
     Ogre::TexturePtr m_texture;
@@ -68,6 +75,13 @@ namespace rviz_birdeye_display::displays
     double m_currentResolution = 0.05;
 
     int m_num_classes = 11;
+
+    int m_colormap = 0;
+
+    struct Properties
+    {
+      std::unique_ptr<rviz_common::properties::EditableEnumProperty> colormap;
+    } m_properties;
   };
 
 } // namespace rviz_birdeye_display::displays

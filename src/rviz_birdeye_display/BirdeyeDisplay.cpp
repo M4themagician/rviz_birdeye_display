@@ -12,7 +12,6 @@
 #include <OgreSubMesh.h>
 #include <OgreTechnique.h>
 #include <OgreTextureManager.h>
-#include <opencv2/opencv.hpp>
 #include <rviz_rendering/material_manager.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
@@ -44,6 +43,87 @@ namespace rviz_birdeye_display::displays
 
     BirdeyeDisplay::BirdeyeDisplay()
     {
+
+        m_properties.colormap = std::make_unique<rviz_common::properties::EditableEnumProperty>("Colormap", "Parula", "The Colormap to use to visualize the Category Grid Map.", this, SLOT(updateColormap()));
+        for (int cmap_ = 0; cmap_ <= 21; cmap_++)
+        {
+            std::string cmap_name;
+            switch (cmap_)
+            {
+            case 0:
+                cmap_name = "Autumn";
+                break;
+            case 1:
+                cmap_name = "Bone";
+                break;
+            case 2:
+                cmap_name = "Jet";
+                break;
+            case 3:
+                cmap_name = "Winter";
+                break;
+            case 4:
+                cmap_name = "Rainbow";
+                break;
+            case 5:
+                cmap_name = "Ocean";
+                break;
+            case 6:
+                cmap_name = "Summer";
+                break;
+            case 7:
+                cmap_name = "Spring";
+                break;
+            case 8:
+                cmap_name = "Cool";
+                break;
+            case 9:
+                cmap_name = "HSV";
+                break;
+            case 10:
+                cmap_name = "Pink";
+                break;
+            case 11:
+                cmap_name = "Hot";
+                break;
+            case 12:
+                cmap_name = "Parula";
+                break;
+            case 13:
+                cmap_name = "Magma";
+                break;
+            case 14:
+                cmap_name = "Inferno";
+                break;
+            case 15:
+                cmap_name = "Plasma";
+                break;
+            case 16:
+                cmap_name = "Viridis";
+                break;
+            case 17:
+                cmap_name = "Cividis";
+                break;
+            case 18:
+                cmap_name = "Twilight";
+                break;
+            case 19:
+                cmap_name = "Twilight shifted";
+                break;
+            case 20:
+                cmap_name = "Turbo";
+                break;
+            case 21:
+                cmap_name = "Deepgreen";
+                break;
+            default:
+                break;
+            }
+            m_properties.colormap.get()->addOption(cmap_name.c_str());
+        }
+
+        updateColormap();
+
         std::string message_type = rosidl_generator_traits::name<ImageMsg>();
         topic_property_->setMessageType(QString::fromStdString(message_type));
         topic_property_->setDescription(QString::fromStdString(message_type) + " topic to subscribe to.");
@@ -70,6 +150,102 @@ namespace rviz_birdeye_display::displays
             scene_manager_->destroyManualObject(m_imageObject);
         }
         unsubscribe();
+    }
+    void
+    BirdeyeDisplay::updateColormap()
+    {
+        auto cmap_str = m_properties.colormap->getString();
+        int cmap_int;
+        if (cmap_str == "Autumn")
+        {
+            cmap_int = 0;
+        }
+        else if (cmap_str == "Bone")
+        {
+            cmap_int = 1;
+        }
+        else if (cmap_str == "Jet")
+        {
+            cmap_int = 2;
+        }
+        else if (cmap_str == "Winter")
+        {
+            cmap_int = 3;
+        }
+        else if (cmap_str == "Rainbow")
+        {
+            cmap_int = 4;
+        }
+        else if (cmap_str == "Ocean")
+        {
+            cmap_int = 5;
+        }
+        else if (cmap_str == "Summer")
+        {
+            cmap_int = 6;
+        }
+        else if (cmap_str == "Spring")
+        {
+            cmap_int = 7;
+        }
+        else if (cmap_str == "Cool")
+        {
+            cmap_int = 8;
+        }
+        else if (cmap_str == "HSV")
+        {
+            cmap_int = 9;
+        }
+        else if (cmap_str == "Pink")
+        {
+            cmap_int = 10;
+        }
+        else if (cmap_str == "Hot")
+        {
+            cmap_int = 11;
+        }
+        else if (cmap_str == "Parula")
+        {
+            cmap_int = 12;
+        }
+        else if (cmap_str == "Magma")
+        {
+            cmap_int = 13;
+        }
+        else if (cmap_str == "Inferno")
+        {
+            cmap_int = 14;
+        }
+        else if (cmap_str == "Plasma")
+        {
+            cmap_int = 15;
+        }
+        else if (cmap_str == "Viridis")
+        {
+            cmap_int = 16;
+        }
+        else if (cmap_str == "Cividis")
+        {
+            cmap_int = 17;
+        }
+        else if (cmap_str == "Twilight")
+        {
+            cmap_int = 18;
+        }
+        else if (cmap_str == "Twilight shifted")
+        {
+            cmap_int = 19;
+        }
+        else if (cmap_str == "Turbo")
+        {
+            cmap_int = 20;
+        }
+        else
+        {
+            cmap_int = 21;
+        }
+
+        m_colormap = cmap_int;
     }
 
     void BirdeyeDisplay::createTextures()
@@ -198,7 +374,7 @@ namespace rviz_birdeye_display::displays
         cv::Mat input_categories(img_msg.height, img_msg.width, cvTypeFromEncoding(img_msg.encoding), (void *)img_msg.data.data(), img_msg.step);
 
         cv::Mat input;
-        cv::applyColorMap(255 / m_num_classes * input_categories, input, cv::COLORMAP_VIRIDIS);
+        cv::applyColorMap(255 / m_num_classes * input_categories, input, m_colormap);
 
         cv::Mat textureMat(m_currentHeight, m_currentWidth, CV_8UC4, (void *)pixelBox.data);
         cv::cvtColor(input, textureMat, cv::COLOR_BGR2BGRA, 4);
