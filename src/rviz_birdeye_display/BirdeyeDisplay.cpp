@@ -43,7 +43,9 @@ namespace rviz_birdeye_display::displays
 
     BirdeyeDisplay::BirdeyeDisplay()
     {
-
+        m_properties.alpha = std::make_unique<rviz_common::properties::FloatProperty>("Alpha", 1.0f, "Opacity of Map", this, SLOT(updateAlpha()));
+        m_properties.alpha->setMin(0.0f);
+        m_properties.alpha->setMax(1.0f);
         m_properties.colormap = std::make_unique<rviz_common::properties::EditableEnumProperty>("Colormap", "Parula", "The Colormap to use to visualize the Category Grid Map.", this, SLOT(updateColormap()));
         for (int cmap_ = 0; cmap_ <= 21; cmap_++)
         {
@@ -123,6 +125,7 @@ namespace rviz_birdeye_display::displays
         }
 
         updateColormap();
+        updateAlpha();
 
         std::string message_type = rosidl_generator_traits::name<ImageMsg>();
         topic_property_->setMessageType(QString::fromStdString(message_type));
@@ -150,6 +153,10 @@ namespace rviz_birdeye_display::displays
             scene_manager_->destroyManualObject(m_imageObject);
         }
         unsubscribe();
+    }
+    void BirdeyeDisplay::updateAlpha()
+    {
+        m_alpha = m_properties.alpha->getFloat();
     }
     void
     BirdeyeDisplay::updateColormap()
@@ -384,7 +391,10 @@ namespace rviz_birdeye_display::displays
         cv::split(textureMat, channels);
 
         // Assign the mask to the last channel of the image
-        channels[3] = 255 * (1 - input_categories == 0);
+        channels[3].setTo(m_alpha * 255);
+        channels[3].setTo(0, input_categories == 0);
+
+        // = static_cast<uint8_t>(m_alpha * 255) * (1 - input_categories == 0);
 
         // Finally concat channels for rgba image
         cv::merge(channels, textureMat);
