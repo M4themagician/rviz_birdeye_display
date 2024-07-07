@@ -43,6 +43,7 @@ namespace rviz_birdeye_display::displays
 
     BirdeyeDisplay::BirdeyeDisplay()
     {
+
         m_properties.alpha = std::make_unique<rviz_common::properties::FloatProperty>("Alpha", 1.0f, "Opacity of Map", this, SLOT(updateAlpha()));
         m_properties.alpha->setMin(0.0f);
         m_properties.alpha->setMax(1.0f);
@@ -154,6 +155,7 @@ namespace rviz_birdeye_display::displays
         }
         unsubscribe();
     }
+
     void BirdeyeDisplay::updateAlpha()
     {
         m_alpha = m_properties.alpha->getFloat();
@@ -316,10 +318,10 @@ namespace rviz_birdeye_display::displays
 
         Ogre::Vector3 position;
         Ogre::Quaternion orientation;
-        if (!context_->getFrameManager()->getTransform("ego_vehicle", msg->header.stamp,
+        if (!context_->getFrameManager()->getTransform(msg->header.frame_id, msg->header.stamp,
                                                        position, orientation))
         {
-            setMissingTransformToFixedFrame("ego_vehicle");
+            setMissingTransformToFixedFrame(msg->header.frame_id);
             return;
         }
         setTransformOk();
@@ -394,27 +396,8 @@ namespace rviz_birdeye_display::displays
         channels[3].setTo(m_alpha * 255);
         channels[3].setTo(0, input_categories == 0);
 
-        // = static_cast<uint8_t>(m_alpha * 255) * (1 - input_categories == 0);
-
         // Finally concat channels for rgba image
         cv::merge(channels, textureMat);
-
-        // if (sensor_msgs::image_encodings::numChannels(input.encoding) == 1)
-        // {
-        //     cv::cvtColor(input, textureMat, cv::COLOR_GRAY2BGRA, 4);
-        // }
-        // else if (input.encoding.rfind("rgb", 0) == 0)
-        // {
-        //     cv::cvtColor(input, textureMat, cv::COLOR_RGB2BGRA, 4);
-        // }
-        // else if (input.encoding.rfind("bgr", 0) == 0)
-        // {
-        //     cv::cvtColor(input, textureMat, cv::COLOR_BGR2BGRA, 4);
-        // }
-        // else
-        // {
-        //     throw std::runtime_error{"Unknown encoding: " + input.encoding};
-        // }
 
         // Unlock the pixel buffer
         pixelBuffer->unlock();
