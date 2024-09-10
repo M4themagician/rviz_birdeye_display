@@ -322,8 +322,6 @@ namespace rviz_birdeye_display::displays
                                                        position, orientation))
         {
             setMissingTransformToFixedFrame(msg->header.frame_id);
-            setStatus(rviz_common::properties::StatusProperty::Warn, "Topic",
-                      QString::fromStdString("Missing Transform to fixed frame " + msg->header.frame_id + "."));
             return;
         }
         setTransformOk();
@@ -358,7 +356,7 @@ namespace rviz_birdeye_display::displays
          */
 
         // 0
-        m_imageObject->position(xOffset, height + yOffset, 0);
+        m_imageObject->position(xOffset, height + yOffset, 0.025);
         m_imageObject->textureCoord(0, 0);
 
         // 1
