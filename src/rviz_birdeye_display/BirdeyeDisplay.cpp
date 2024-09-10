@@ -322,6 +322,8 @@ namespace rviz_birdeye_display::displays
                                                        position, orientation))
         {
             setMissingTransformToFixedFrame(msg->header.frame_id);
+            setStatus(rviz_common::properties::StatusProperty::Warn, "Topic",
+                      QString::fromStdString("Missing Transform to fixed frame " + msg->header.frame_id + "."));
             return;
         }
         setTransformOk();
