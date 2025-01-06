@@ -57,6 +57,7 @@ namespace rviz_birdeye_display::displays
   private Q_SLOTS:
     void updateColormap();
     void updateAlpha();
+    void updateZ();
 
   private:
     Ogre::ManualObject *m_imageObject = nullptr;
@@ -75,6 +76,7 @@ namespace rviz_birdeye_display::displays
     uint32_t m_currentWidth = 0;
     double m_currentResolution = 0.05;
     float m_alpha = 1.0f;
+    float m_z = 0.0f;
 
     int m_num_classes = 11;
 
@@ -84,6 +86,7 @@ namespace rviz_birdeye_display::displays
     {
       std::unique_ptr<rviz_common::properties::EditableEnumProperty> colormap;
       std::unique_ptr<rviz_common::properties::FloatProperty> alpha;
+      std::unique_ptr<rviz_common::properties::FloatProperty> z;
     } m_properties;
   };
 

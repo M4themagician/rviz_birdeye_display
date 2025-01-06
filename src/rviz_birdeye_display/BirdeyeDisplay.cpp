@@ -47,6 +47,9 @@ namespace rviz_birdeye_display::displays
         m_properties.alpha = std::make_unique<rviz_common::properties::FloatProperty>("Alpha", 1.0f, "Opacity of Map", this, SLOT(updateAlpha()));
         m_properties.alpha->setMin(0.0f);
         m_properties.alpha->setMax(1.0f);
+        m_properties.z = std::make_unique<rviz_common::properties::FloatProperty>("Z", 0.0f, "Z Height of Texture", this, SLOT(updateZ()));
+        m_properties.z->setMin(-1.0f);
+        m_properties.z->setMax(1.0f);
         m_properties.colormap = std::make_unique<rviz_common::properties::EditableEnumProperty>("Colormap", "Parula", "The Colormap to use to visualize the Category Grid Map.", this, SLOT(updateColormap()));
         for (int cmap_ = 0; cmap_ <= 21; cmap_++)
         {
@@ -160,6 +163,12 @@ namespace rviz_birdeye_display::displays
     {
         m_alpha = m_properties.alpha->getFloat();
     }
+
+    void BirdeyeDisplay::updateZ()
+    {
+        m_z = m_properties.z->getFloat();
+    }
+
     void
     BirdeyeDisplay::updateColormap()
     {
@@ -356,19 +365,19 @@ namespace rviz_birdeye_display::displays
          */
 
         // 0
-        m_imageObject->position(xOffset, height + yOffset, 0.025);
+        m_imageObject->position(xOffset, height + yOffset, m_z);
         m_imageObject->textureCoord(0, 0);
 
         // 1
-        m_imageObject->position(xOffset + width, height + yOffset, 0);
+        m_imageObject->position(xOffset + width, height + yOffset, m_z);
         m_imageObject->textureCoord(1, 0);
 
         // 2
-        m_imageObject->position(xOffset + width, +yOffset, 0);
+        m_imageObject->position(xOffset + width, +yOffset, m_z);
         m_imageObject->textureCoord(1, 1);
 
         // 3
-        m_imageObject->position(xOffset, +yOffset, 0);
+        m_imageObject->position(xOffset, +yOffset, m_z);
         m_imageObject->textureCoord(0, 1);
         m_imageObject->end();
 
