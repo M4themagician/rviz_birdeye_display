@@ -58,11 +58,16 @@ namespace rviz_birdeye_display::displays
     void updateColormap();
     void updateAlpha();
     void updateZ();
+    void updateRaisedIndex();
+    void updateRaisedHeight();
 
   private:
     Ogre::ManualObject *m_imageObject = nullptr;
+    Ogre::ManualObject *m_imageObject_raised = nullptr;
     Ogre::TexturePtr m_texture;
+    Ogre::TexturePtr m_texture_raised;
     Ogre::MaterialPtr m_material;
+    Ogre::MaterialPtr m_material_raised;
 
     rclcpp::Subscription<ImageMsg>::SharedPtr m_imageSub;
     drives_image_processing_msgs::msg::MapMetaData m_currentBirdeyeParam;
@@ -78,6 +83,9 @@ namespace rviz_birdeye_display::displays
     float m_alpha = 1.0f;
     float m_z = 0.0f;
 
+    int m_raised_index = 255;
+    float m_raised_height = 0.2f;
+
     int m_num_classes = 11;
 
     int m_colormap = 0;
@@ -87,6 +95,8 @@ namespace rviz_birdeye_display::displays
       std::unique_ptr<rviz_common::properties::EditableEnumProperty> colormap;
       std::unique_ptr<rviz_common::properties::FloatProperty> alpha;
       std::unique_ptr<rviz_common::properties::FloatProperty> z;
+      std::unique_ptr<rviz_common::properties::FloatProperty> raised_height;
+      std::unique_ptr<rviz_common::properties::IntProperty> raised_index;
     } m_properties;
   };
 
